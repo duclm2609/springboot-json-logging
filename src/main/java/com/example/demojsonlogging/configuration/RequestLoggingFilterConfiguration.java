@@ -16,9 +16,6 @@ public class RequestLoggingFilterConfiguration {
         loggingFilter.setIncludePayload(true);
         loggingFilter.setMaxPayloadLength(2048);
         loggingFilter.setShouldLogBefore(true);
-        loggingFilter.setHeaderPredicate(
-                t -> t.equals("user-agent") || t.equals("host") || t.equals("accept-encoding")
-        );
         return loggingFilter;
     }
 }

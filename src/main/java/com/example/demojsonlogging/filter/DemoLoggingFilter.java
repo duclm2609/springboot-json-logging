@@ -18,6 +18,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.nio.charset.StandardCharsets;
 import java.util.Enumeration;
 import java.util.HashMap;
@@ -26,6 +27,7 @@ import java.util.UUID;
 import java.util.function.Predicate;
 
 import static net.logstash.logback.argument.StructuredArguments.entries;
+import static net.logstash.logback.argument.StructuredArguments.value;
 
 @Slf4j
 public class DemoLoggingFilter extends OncePerRequestFilter {
@@ -182,7 +184,11 @@ public class DemoLoggingFilter extends OncePerRequestFilter {
             byte[] buf = wrapper.getContentAsByteArray();
             if (buf.length > 0) {
                 int length = Math.min(buf.length, getMaxPayloadLength());
-                return new String(buf, 0, length, StandardCharsets.UTF_8);
+                try {
+                    return new String(buf, 0, length, wrapper.getCharacterEncoding());
+                } catch (UnsupportedEncodingException e) {
+                    e.printStackTrace();
+                }
             }
         }
         return null;
@@ -223,7 +229,7 @@ public class DemoLoggingFilter extends OncePerRequestFilter {
      * @param cachedRequest current wrapped HTTP request
      */
     protected void beforeRequest(HttpServletRequest cachedRequest) {
-        log.info("Before request: {}", entries(createRequestMessageMap(cachedRequest)));
+        log.info("START request: {}", entries(createRequestMessageMap(cachedRequest)));
     }
 
     /**
@@ -234,7 +240,7 @@ public class DemoLoggingFilter extends OncePerRequestFilter {
      * @param cachedResponse request's wrapped HTTP response
      */
     protected void afterRequest(HttpServletRequest cachedRequest, HttpServletResponse cachedResponse) throws IOException {
-        log.info("After request: {}", entries(createResponseMessageMap(cachedRequest, cachedResponse)));
+        log.info("END request: {}", entries(createResponseMessageMap(cachedRequest, cachedResponse)), value("type", "HTTP_REQUEST"));
     }
 
     @Override
@@ -248,8 +254,6 @@ public class DemoLoggingFilter extends OncePerRequestFilter {
             if (isIncludePayload() && !(request instanceof ContentCachingRequestWrapper)) {
                 requestToUse = new ContentCachingRequestWrapper(request, getMaxPayloadLength());
             }
-        } else {
-            log.warn("Async dispatch request. Skipped.");
         }
 
         if (shouldLogBefore) {
@@ -269,8 +273,6 @@ public class DemoLoggingFilter extends OncePerRequestFilter {
         } finally {
             if (shouldLogAfter && !isAsyncStarted(requestToUse)) {
                 afterRequest(requestToUse, responseToUse);
-            } else {
-                log.warn("Request response result is kipped.");
             }
             MDC.clear();
         }
