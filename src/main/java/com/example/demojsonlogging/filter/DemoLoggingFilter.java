@@ -239,6 +239,7 @@ public class DemoLoggingFilter extends OncePerRequestFilter {
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
+        MDC.put("request_id", UUID.randomUUID().toString());
         boolean isFirstRequest = !isAsyncDispatch(request);
         HttpServletRequest requestToUse = request;
         boolean shouldLogBefore = shouldLogBefore(requestToUse);
@@ -263,7 +264,6 @@ public class DemoLoggingFilter extends OncePerRequestFilter {
             }
         }
         try {
-            MDC.put("request_id", UUID.randomUUID().toString());
             requestToUse.setAttribute(REQ_ATTRIBUTE_START_AT, System.currentTimeMillis());
             filterChain.doFilter(requestToUse, responseToUse);
         } finally {
