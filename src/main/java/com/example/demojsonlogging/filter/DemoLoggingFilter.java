@@ -335,7 +335,7 @@ public class DemoLoggingFilter extends OncePerRequestFilter {
     }
 
     protected Map<String, Object> createResponseMessageMap(HttpServletRequest request, HttpServletResponse response) throws IOException {
-        Map<String, Object> responseMap = new HashMap<>();
+        Map<String, Object> responseMap = new HashMap<>(createRequestMessageMap(request));
         String payload = null;
         ContentCachingResponseWrapper wrapper =
                 WebUtils.getNativeResponse(response, ContentCachingResponseWrapper.class);
