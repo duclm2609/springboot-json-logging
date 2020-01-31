@@ -290,7 +290,7 @@ public class DemoLoggingFilter extends OncePerRequestFilter {
         if (isIncludeQueryString()) {
             String queryString = request.getQueryString();
             if (queryString != null) {
-                requestMap.put("query_string", queryString);
+                requestMap.put("full_uri", requestMap.get("request_uri") + "?" + queryString);
             }
         }
 
